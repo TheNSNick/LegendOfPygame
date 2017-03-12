@@ -1,6 +1,7 @@
 import sys, pygame
 from pygame.locals import *
 from classes import *
+import debug
 
 SCREEN = None
 GAME_CLOCK = None
@@ -8,6 +9,7 @@ SCREEN_WIDTH = 256
 SCREEN_HEIGHT = 240
 TILE_SIZE = 16
 FPS = 60
+BG_COLOR = (0, 0, 0)
 
 
 def main():
@@ -21,10 +23,10 @@ def main():
         game_over()
 
 
-def play_game(player, wall_group):
+def play_game(player, enemy_group, wall_group):
     """MAIN SECOND-TO-SECOND GAMEPLAY LOOP"""
     # update player
-    player.update()
+    player.update(enemy_group, wall_group)
     # check for player/trigger collisions, do stuff if nec.
     # check for key-presses, do stuff if nec. (e.g. make PlayerProjectile, update Player.dx/.dy)
     process_keys(player)
@@ -35,6 +37,7 @@ def play_game(player, wall_group):
     # check for Enemy/Player collisions
     # check for EnemyProjectile/Player collisions
     # check for Wall/Player collisions, move Player outside wall if nec.
+    """
     wall_collisions = pygame.sprite.spritecollide(player, wall_group, False)
     while len(wall_collisions) > 0:
         for wall_hit in wall_collisions:
@@ -47,6 +50,7 @@ def play_game(player, wall_group):
             elif player.direction == 'RIGHT':
                 player.rect.right = wall_hit.rect.left
         wall_collisions = pygame.sprite.spritecollide(player, wall_group, False)
+    """
 
 
 def process_keys(player):
@@ -64,10 +68,14 @@ def process_keys(player):
         #elif event.key == K_[key here]:
             #player action here
     for event in pygame.event.get(KEYUP):
-        if (event.key == K_w or event.key == K_s or event.key == K_UP or event.key == K_DOWN) and player.dy != 0:
-            player.dy = 0
-        elif (event.key == K_a or event.key == K_d or event.key == K_LEFT or event.key == K_RIGHT) and player.dx != 0:
-            player.dx = 0
+        if (event.key == K_w or event.key == K_UP) and player.dy < 0:
+            player.dy += player.move_speed
+        elif (event.key == K_s or event.key == K_DOWN) and player.dy > 0:
+            player.dy -= player.move_speed
+        elif (event.key == K_a or event.key == K_LEFT) and player.dx < 0:
+            player.dx += player.move_speed
+        elif (event.key == K_d or event.key == K_RIGHT) and player.dx > 0:
+            player.dx -= player.move_speed
 
 
 def play_intro():
@@ -75,24 +83,51 @@ def play_intro():
 
 
 def game_over():
-    pass
+    over_font = pygame.font.SysFont('arial', 24)
+    over_surf = over_font.render('Game Over', False, (222, 222, 222))
+    over_rect = over_surf.get_rect()
+    over_rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                terminate()
+            elif event.type == KEYDOWN:
+                if event.key == K_RETURN:
+                    return
+        SCREEN.fill(BG_COLOR)
+        SCREEN.blit(over_surf, over_rect)
+        pygame.display.update()
+        GAME_CLOCK.tick(FPS)
 
 
 def run_game():
     game_screen = pygame.Surface((256, 176))
     p = Player()
     p.set_coords((120, 136))
+
+    debug_pane = debug.DebugPane(p)
     player_group = pygame.sprite.Group()
     player_group.add(p)
+    e = Enemy(120, 80)
+    enemy_group = pygame.sprite.Group()
+    enemy_group.add(e)
     wall_group = pygame.sprite.Group()
-    wall_group.add(load_level('samplescreen.txt'))
+    #wall_group.add(load_level('samplescreen.txt'))
+    wall_group.add(Wall(0, 0, SCREEN_WIDTH, TILE_SIZE))
+    wall_group.add(Wall(0, SCREEN_HEIGHT - TILE_SIZE - 64, SCREEN_WIDTH, TILE_SIZE))
+    wall_group.add(Wall(0, TILE_SIZE, TILE_SIZE, SCREEN_HEIGHT - 2 * TILE_SIZE))
+    wall_group.add(Wall(SCREEN_WIDTH - TILE_SIZE, TILE_SIZE, TILE_SIZE, SCREEN_HEIGHT - 2 * TILE_SIZE))
     while True:
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                terminate()
-        play_game(p, wall_group)
+        if pygame.event.get(QUIT):
+            terminate()
+        play_game(p, enemy_group, wall_group)
+        if p.health <= 0:
+            return
         game_screen.fill((0, 0, 0))
+        debug_pane.update(p)
+        debug_pane.draw(SCREEN)
         player_group.draw(game_screen)
+        enemy_group.draw(game_screen)
         wall_group.draw(game_screen)
         SCREEN.blit(game_screen, (0, 64))
         pygame.display.update()
