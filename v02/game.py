@@ -59,7 +59,7 @@ def play_game():
         if len(pygame.event.get(QUIT)) > 0:
             terminate()
         game_screen.fill(bg_color)
-        # player.update()
+        player.update()
         all_objects.draw(game_screen)
         SCREEN.blit(game_screen, (0, SCREEN_HEIGHT - GAME_SCREEN_HEIGHT))
         pygame.display.update()
