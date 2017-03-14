@@ -55,11 +55,19 @@ def play_game():
     bg_color = BLACK
     all_objects = pygame.sprite.Group()
     player = Player(all_objects, coords=(120, 80))
+    # TESTING BELOW
+    wall_group = pygame.sprite.Group()
+    wall_image = pygame.Surface((32, 32))
+    wall_image.fill((128, 128, 128))
+    wall_1 = Game_Object(all_objects, wall_group, image=wall_image, coords=(50, 50))
+    wall_2 = Game_Object(all_objects, wall_group, image=wall_image, coords=(98, 50))
+    # TESTING ABOVE
     while True:
         if len(pygame.event.get(QUIT)) > 0:
             terminate()
         game_screen.fill(bg_color)
-        player.update()
+        player.update(wall_group)
+        #player.collision_check(wall_group)
         all_objects.draw(game_screen)
         SCREEN.blit(game_screen, (0, SCREEN_HEIGHT - GAME_SCREEN_HEIGHT))
         pygame.display.update()
