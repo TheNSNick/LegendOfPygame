@@ -1,7 +1,10 @@
-import pygame, sys
+import pygame
+import sys
 from pygame.locals import *
-import GameObjects, Locations
-import debug
+
+import GameObjects
+import Locations
+from v01 import debug
 
 SCREEN = None
 GAME_CLOCK = None

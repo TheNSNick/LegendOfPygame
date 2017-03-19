@@ -55,8 +55,9 @@ class Wall(GameObject):
 class Exit(GameObject):
     """Class for transporting the player from one screen to another when contacted."""
     def __init__(self, *args, **kwargs):
-        GameObject.__init__(self)
+        GameObject.__init__(self, *args, **kwargs)
         self.destination = kwargs['destination']
+        self.direction = kwargs['direction']
 
 
 class Player(GameObject):

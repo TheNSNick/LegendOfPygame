@@ -63,17 +63,17 @@ def play_game():
     while True:
         if len(pygame.event.get(QUIT)) > 0:
             terminate()
-        #TODO -- move Exit collision check to Player class, get it to work (BELOW)
+        #TODO ??? -- move Exit collision check to Player class (BELOW) ???
         for obj in all_objects:
             if isinstance(obj, GameObjects04.Exit):
                 if pygame.sprite.collide_rect(obj, player):
-                    screen_transition(all_objects, obj.destination, obj.direction)
+                    screen_transition(game_screen, all_objects, obj.destination, obj.direction)
                     new_objects, entry_points = load_screen(obj.destination)
-                    all_objects.clear()
+                    all_objects.empty()
                     all_objects.add(new_objects)
                     player.set_coords(entry_points[obj.direction])
                     all_objects.add(player)
-        # ABOVE: SEE "to do"
+        # ABOVE: SEE "to do" ???
         player.update(all_objects)
         game_screen.fill(bg_color)
         all_objects.draw(game_screen)
@@ -110,17 +110,18 @@ def load_screen(name, offsetX=0, offsetY=0):
 
 
 def screen_transition(game_screen, current_objects, destination_name, direction):
+    """Animates the transition between current and new screens."""
     assert direction in ['UP', 'DOWN', 'LEFT', 'RIGHT']
-    offset_horz = 0
-    if direction == 'UP':
-        offset_horz -= GAME_SCREEN_HEIGHT
-    elif direction == 'DOWN':
-        offset_horz += GAME_SCREEN_HEIGHT
     offset_vert = 0
+    if direction == 'UP':
+        offset_vert -= GAME_SCREEN_HEIGHT
+    elif direction == 'DOWN':
+        offset_vert += GAME_SCREEN_HEIGHT
+    offset_horz = 0
     if direction == 'LEFT':
-        offset_vert -= SCREEN_WIDTH
+        offset_horz -= SCREEN_WIDTH
     elif direction == 'RIGHT':
-        offset_vert += SCREEN_WIDTH
+        offset_horz += SCREEN_WIDTH
     draw_objects = pygame.sprite.Group()
     for o in current_objects:
         if not isinstance(o, GameObjects04.Player) and not isinstance(o, GameObjects04.Exit):
@@ -138,6 +139,7 @@ def screen_transition(game_screen, current_objects, destination_name, direction)
             draw_objects.draw(game_screen)
             SCREEN.blit(game_screen, (0, SCREEN_HEIGHT - GAME_SCREEN_HEIGHT))
             pygame.display.update(Rect(0, SCREEN_HEIGHT - GAME_SCREEN_HEIGHT, SCREEN_WIDTH, GAME_SCREEN_HEIGHT))
+            GAME_CLOCK.tick(FPS)
     else:
         for i in range(SCREEN_WIDTH):
             for o in draw_objects:
@@ -149,6 +151,7 @@ def screen_transition(game_screen, current_objects, destination_name, direction)
             draw_objects.draw(game_screen)
             SCREEN.blit(game_screen, (0, SCREEN_HEIGHT - GAME_SCREEN_HEIGHT))
             pygame.display.update(Rect(0, SCREEN_HEIGHT - GAME_SCREEN_HEIGHT, SCREEN_WIDTH, GAME_SCREEN_HEIGHT))
+            GAME_CLOCK.tick(FPS)
 
 
 def terminate():

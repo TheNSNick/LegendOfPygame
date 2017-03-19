@@ -1,7 +1,5 @@
-import sys, pygame
-from pygame.locals import *
-from classes import *
 import debug
+from classes import *
 
 SCREEN = None
 GAME_CLOCK = None
