@@ -3,7 +3,7 @@ from pygame.locals import *
 from game import TILE_SIZE, terminate
 
 
-class Game_Object(pygame.sprite.Sprite):
+class GameObject(pygame.sprite.Sprite):
     """Base class for all on-screen game objects."""
 
     def __init__(self, *args, **kwargs):
@@ -40,12 +40,12 @@ class Game_Object(pygame.sprite.Sprite):
             self.rect.topleft = kwargs['coords']
 
 
-class Player(Game_Object):
+class Player(GameObject):
     """Class representing the player sprite."""
     move_speed = 2
 
     def __init__(self, *args, **kwargs):
-        Game_Object.__init__(self, *args, **kwargs)
+        GameObject.__init__(self, *args, **kwargs)
         self.spritesheet = pygame.image.load('player_sprite.png').convert()
         self.direction = ''
         self.set_direction('DOWN')
@@ -120,40 +120,45 @@ class Player(Game_Object):
             walls = pygame.sprite.spritecollide(self, wall_group, False)
             self.dy = 0
 
-    def collision_check(self, wall_group):
+    def collision_check(self, objects):
+        wall_group = [x for x in objects if isinstance(x, Wall)]
         if self.dx != 0 or self.dy == 0:
             self.horizontal_collisions(wall_group)
         if self.dy != 0:
             self.vertical_collisions(wall_group)
 
-    def update(self, wall_group, **kwargs):
+    def update(self, objects, **kwargs):
         self.process_keys()
-        Game_Object.update(self, **kwargs)
-        self.collision_check(wall_group)
+        GameObject.update(self, **kwargs)
+        self.collision_check(objects)
 
 
-class Wall(Game_Object):
+class Wall(GameObject):
     """Class for walls."""
 
     def __init__(self, *args, **kwargs):
-        Game_Object.__init__(self, *args, **kwargs)
+        GameObject.__init__(self, *args, **kwargs)
 
 
-class Door(Game_Object):
+class Door(GameObject):
     """Class for Game Objects that take the Player to another location."""
 
     def __init__(self, *args, **kwargs):
-        Game_Object.__init__(self, *args, **kwargs)
+        GameObject.__init__(self, *args, **kwargs)
         self.location = kwargs['location']
+        if 'transition' in kwargs.keys():
+            self.transition = kwargs['transition']
+        else:
+            self.transition = 'OTHER'
         if 'points' in kwargs.keys():
             self.trigger_points = kwargs['points']
         else:
             self.trigger_points = [self.rect.top, self.rect.bottom, self.rect.left, self.rect.right]
 
 
-class Enemy(Game_Object):
+class Enemy(GameObject):
     """Base class for enemies."""
 
     def __init__(self, *args, **kwargs):
-        Game_Object.__init__(self, *args, **kwargs)
+        GameObject.__init__(self, *args, **kwargs)
         #TODO
