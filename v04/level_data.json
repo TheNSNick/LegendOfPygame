@@ -96,13 +96,22 @@
                 ]
             }, 
             {
+                "color": [
+                    0,
+                    0,
+                    0
+                ],
                 "coords": [
-                    128, 
+                    120,
                     -8
                 ], 
                 "direction": "UP", 
                 "destination": "h7", 
-                "type": "exit"
+                "type": "exit",
+                "size": [
+                    16,
+                    1
+                ]
             }
         ]
     }, 
@@ -203,13 +212,22 @@
                 ]
             }, 
             {
+                "color": [
+                    0,
+                    0,
+                    0
+                ],
                 "coords": [
-                    128, 
+                    120,
                     184
                 ], 
                 "direction": "DOWN", 
                 "destination": "h8", 
-                "type": "exit"
+                "type": "exit",
+                "size": [
+                    16,
+                    1
+                ]
             }
         ]
     }

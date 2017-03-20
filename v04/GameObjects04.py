@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 from game04 import TILE_SIZE, terminate
 
+
 class GameObject(pygame.sprite.Sprite):
     """Base class for objects appearing in-game."""
     def __init__(self, *args, **kwargs):
@@ -68,6 +69,7 @@ class Player(GameObject):
         self.direction = ''
         self.set_direction('DOWN')
         self.move_speed = 2
+        self.health = 6
 
     def set_direction(self, direction):
         x_dict = {'UP': 0, 'DOWN': 1, 'LEFT': 2, 'RIGHT': 3}

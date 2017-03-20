@@ -1,6 +1,6 @@
 import pygame, sys, json
 from pygame.locals import *
-import GameObjects04
+import GameObjects04, Debug04
 
 SCREEN = None
 GAME_CLOCK = None
@@ -29,11 +29,12 @@ def main():
 
 
 def play_intro():
-    intro_font1 = pygame.font.SysFont('arial', 24)
+    """Displays intro text, waits for input."""
+    intro_font1 = pygame.font.Font('8bo.ttf', 24)
     intro_surf1 = intro_font1.render('Legend of Pygame', False, WHITE)
     intro_rect1 = intro_surf1.get_rect()
-    intro_rect1.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-    intro_font2 = pygame.font.SysFont('arial', 12)
+    intro_rect1.midbottom = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+    intro_font2 = pygame.font.Font('8bo.ttf', 12)
     intro_surf2 = intro_font2.render('Press Enter to Begin', False, WHITE)
     intro_rect2 = intro_surf2.get_rect()
     intro_rect2.midtop = (SCREEN_WIDTH / 2, intro_rect1.bottom + 12)
@@ -53,7 +54,9 @@ def play_intro():
 
 
 def play_game():
+    """Main gameplay loop."""
     game_screen = pygame.Surface((SCREEN_WIDTH, GAME_SCREEN_HEIGHT))
+    debug_screen = Debug04.DebugPane()
     bg_color = BLACK
     all_objects = pygame.sprite.Group()
     player = GameObjects04.Player(all_objects, coords=(128, 80))
@@ -63,7 +66,7 @@ def play_game():
     while True:
         if len(pygame.event.get(QUIT)) > 0:
             terminate()
-        #TODO ??? -- move Exit collision check to Player class (BELOW) ???
+        # screen transition check (Exit/Player collision)
         for obj in all_objects:
             if isinstance(obj, GameObjects04.Exit):
                 if pygame.sprite.collide_rect(obj, player):
@@ -73,11 +76,12 @@ def play_game():
                     all_objects.add(new_objects)
                     player.set_coords(entry_points[obj.direction])
                     all_objects.add(player)
-        # ABOVE: SEE "to do" ???
+                    location = obj.destination
         player.update(all_objects)
         game_screen.fill(bg_color)
         all_objects.draw(game_screen)
         SCREEN.blit(game_screen, (0, SCREEN_HEIGHT - GAME_SCREEN_HEIGHT))
+        debug_screen.draw(SCREEN, player, location)
         pygame.display.update()
         GAME_CLOCK.tick(FPS)
 
@@ -155,6 +159,7 @@ def screen_transition(game_screen, current_objects, destination_name, direction)
 
 
 def terminate():
+    """Exits the program."""
     pygame.quit()
     sys.exit()
 
