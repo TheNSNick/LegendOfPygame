@@ -66,8 +66,12 @@ def play_game():
     while True:
         if len(pygame.event.get(QUIT)) > 0:
             terminate()
-        # screen transition check (Exit/Player collision)
+        # object updates
         for obj in all_objects:
+            # player attack updates (if any)
+            if isinstance(obj, GameObjects04.SwordAttack):
+                obj.update()
+            # screen transition check (Exit/Player collision)
             if isinstance(obj, GameObjects04.Exit):
                 if pygame.sprite.collide_rect(obj, player):
                     screen_transition(game_screen, all_objects, obj.destination, obj.direction)

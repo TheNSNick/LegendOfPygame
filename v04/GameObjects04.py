@@ -61,6 +61,89 @@ class Exit(GameObject):
         self.direction = kwargs['direction']
 
 
+class PlayerAttack(GameObject):
+    """Class representing attacks that harm enemies."""
+    def __init__(self, **kwargs):
+        GameObject.__init__(self, **kwargs)
+        self.damage = 0
+        if 'damage' in kwargs.keys():
+            self.damage = int(kwargs['damage'])
+
+
+class SwordAttack(PlayerAttack):
+    """Class representing the basic sword object."""
+    width = 6
+    beginning_length = 8
+    extend_length = 24
+    hold_frames = 12
+
+    def __init__(self, direction, p_center, **kwargs):
+        self.direction = direction
+        # placeholder image
+        if self.horizontal():
+            image = pygame.Surface((self.beginning_length, self.width))
+        else:
+            image = pygame.Surface((self.width, self.beginning_length))
+        image.fill((0, 0, 222))
+        kw_dict = kwargs
+        kw_dict['image'] = image
+        # end placeholder image
+        PlayerAttack.__init__(self, **kw_dict)
+        self.coords = p_center
+        self.align()
+        self.mode = 'extend'
+        self.hold_frame = 0
+
+    def align(self):
+        if self.direction == 'UP':
+            self.rect.bottomleft = self.coords
+        elif self.direction == 'DOWN':
+            self.rect.topright = self.coords
+        elif self.direction == 'LEFT':
+            self.rect.bottomright = self.coords
+        elif self.direction == 'RIGHT':
+            self.rect.topleft = self.coords
+
+    def horizontal(self):
+        if self.direction in ['UP', 'DOWN']:
+            return False
+        elif self.direction in ['LEFT', 'RIGHT']:
+            return True
+        else:
+            raise ValueError('SwordAttack.horizontal(): self.direction')
+
+    def update(self):
+        if self.mode == 'extend':
+            if self.horizontal():
+                new_image = pygame.Surface((self.image.get_width() + 1, self.image.get_height()))
+                if new_image.get_width() >= self.extend_length:
+                    self.mode = 'hold'
+            else:
+                new_image = pygame.Surface((self.image.get_width(), self.image.get_height() + 1))
+                if new_image.get_height() >= self.extend_length:
+                    self.mode = 'hold'
+            new_image.fill((0, 0, 222))
+            self.set_image(new_image)
+            self.align()
+        elif self.mode == 'hold':
+            self.hold_frame += 1
+            if self.hold_frame >= self.hold_frames:
+                self.mode = 'retract'
+                self.hold_frame = 0
+        elif self.mode == 'retract':
+            if self.horizontal():
+                new_image = pygame.Surface((self.image.get_width() - 1, self.image.get_height()))
+                if new_image.get_width() <= self.beginning_length:
+                    self.kill()
+            else:
+                new_image = pygame.Surface((self.image.get_width(), self.image.get_height() - 1))
+                if new_image.get_height() <= self.beginning_length:
+                    self.kill()
+            new_image.fill((0, 0, 222))
+            self.set_image(new_image)
+            self.align()
+
+
 class Player(GameObject):
     """Class representing the player."""
     def __init__(self, *args, **kwargs):
@@ -68,6 +151,7 @@ class Player(GameObject):
         self.spritesheet = pygame.image.load('player_sprite.png').convert()
         self.direction = ''
         self.set_direction('DOWN')
+        self.mode = 'move'
         self.move_speed = 2
         self.health = 6
 
@@ -78,24 +162,32 @@ class Player(GameObject):
         self.set_image(new_image)
         self.direction = direction
 
-    def process_keys(self):
+    def process_keys(self, object_group):
         for event in pygame.event.get(KEYDOWN):
-            if event.key == K_w or event.key == K_UP:
-                self.set_direction('UP')
-                self.dx = 0
-                self.dy -= self.move_speed
-            if event.key == K_s or event.key == K_DOWN:
-                self.set_direction('DOWN')
-                self.dx = 0
-                self.dy += self.move_speed
-            if event.key == K_a or event.key == K_LEFT:
-                self.set_direction('LEFT')
-                self.dx -= self.move_speed
-                self.dy = 0
-            if event.key == K_d or event.key == K_RIGHT:
-                self.set_direction('RIGHT')
-                self.dx += self.move_speed
-                self.dy = 0
+            if self.mode == 'move':
+                if event.key == K_w or event.key == K_UP:
+                    self.set_direction('UP')
+                    self.dx = 0
+                    self.dy -= self.move_speed
+                if event.key == K_s or event.key == K_DOWN:
+                    self.set_direction('DOWN')
+                    self.dx = 0
+                    self.dy += self.move_speed
+                if event.key == K_a or event.key == K_LEFT:
+                    self.set_direction('LEFT')
+                    self.dx -= self.move_speed
+                    self.dy = 0
+                if event.key == K_d or event.key == K_RIGHT:
+                    self.set_direction('RIGHT')
+                    self.dx += self.move_speed
+                    self.dy = 0
+                if event.key == K_z or event.key == K_RETURN:
+                    self.mode = 'attack'
+                    self.dx = 0
+                    self.dy = 0
+                    attack = SwordAttack(self.direction, self.rect.center)
+                    attack.rect.center = self.rect.center
+                    object_group.add(attack)
             if event.key == K_ESCAPE:
                 terminate()
 
@@ -149,6 +241,13 @@ class Player(GameObject):
             self.vertical_collisions(wall_group)
 
     def update(self, objects, **kwargs):
-        self.process_keys()
+        if self.mode == 'attack':
+            sword_out = False
+            for obj in objects:
+                if isinstance(obj, SwordAttack):
+                    sword_out = True
+            if not sword_out:
+                self.mode = 'move'
+        self.process_keys(objects)
         GameObject.update(self, **kwargs)
         self.collision_check(objects)

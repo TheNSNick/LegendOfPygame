@@ -8,6 +8,7 @@ DEBUG_FONT = pygame.font.Font('8bo.ttf', 8)
 P_LOC_COORDS = (16, 4)
 P_HP_COORDS = (16, 16)
 P_DIR_COORDS = (16, 28)
+P_MODE_COORDS = (16, 40)
 LOC_NAME_COORDS = (240, 16)
 
 
@@ -30,5 +31,6 @@ class DebugPane(pygame.Surface):
         self.write('p_loc: {}'.format(player.rect.topleft), P_LOC_COORDS)
         self.write('p_health: {}'.format(player.health), P_HP_COORDS)
         self.write('p_dir: {}'.format(player.direction), P_DIR_COORDS)
+        self.write('p_mode: {}'.format(player.mode), P_MODE_COORDS)
         self.write('loc: {}'.format(location), LOC_NAME_COORDS, align='topright')
         display.blit(self, (0, 0))
