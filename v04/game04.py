@@ -25,7 +25,7 @@ def main():
     SCREEN.fill(BLACK)
     while True:
         play_game()
-        # game over
+        game_over()
 
 
 def play_intro():
@@ -53,6 +53,30 @@ def play_intro():
                     terminate()
 
 
+def game_over():
+    """Displays game over screen, waits for input."""
+    go_font = pygame.font.Font('8bo.ttf', 48)
+    game_surf = go_font.render('GAME', False, WHITE)
+    game_rect = game_surf.get_rect()
+    game_rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3)
+    over_surf = go_font.render('OVER', False, WHITE)
+    over_rect = over_surf.get_rect()
+    over_rect.center = (SCREEN_WIDTH / 2, 2 * SCREEN_HEIGHT / 3)
+    SCREEN.fill(BLACK)
+    SCREEN.blit(game_surf, game_rect)
+    SCREEN.blit(over_surf, over_rect)
+    pygame.display.update()
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                terminate()
+            elif event.type == KEYDOWN:
+                if event.key == K_RETURN or event.key == K_KP_ENTER:
+                    return
+                elif event.key == K_ESCAPE:
+                    terminate()
+
+
 def play_game():
     """Main gameplay loop."""
     game_screen = pygame.Surface((SCREEN_WIDTH, GAME_SCREEN_HEIGHT))
@@ -60,12 +84,15 @@ def play_game():
     bg_color = BLACK
     all_objects = pygame.sprite.Group()
     player = GameObjects04.Player(all_objects, coords=(128, 80))
+    test_enemy = GameObjects04.Enemy(all_objects, coords=(56, 56))
     location = 'h8'
     loc_objs, _ = load_screen(location)
     all_objects.add(loc_objs)
     while True:
         if len(pygame.event.get(QUIT)) > 0:
             terminate()
+        if player.health <= 0:
+            return
         # object updates
         for obj in all_objects:
             # player attack updates (if any)

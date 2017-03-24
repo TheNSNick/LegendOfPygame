@@ -61,16 +61,36 @@ class Exit(GameObject):
         self.direction = kwargs['direction']
 
 
-class PlayerAttack(GameObject):
+class Enemy(GameObject):
+    """Base enemy class."""
+    def __init__(self, *args, **kwargs):
+        # placeholder image
+        new_image = pygame.Surface((16, 16))
+        new_image.fill((222, 0, 0))
+        kw_dict = kwargs
+        kw_dict['image'] = new_image
+        GameObject.__init__(self, *args, **kw_dict)
+        self.health = 3
+        if 'health' in kwargs:
+            self.health = kwargs['health']
+        self.damage = 1
+        if 'damage' in kwargs:
+            self.damage = kwargs['damage']
+
+
+class Attack(GameObject):
     """Class representing attacks that harm enemies."""
     def __init__(self, **kwargs):
         GameObject.__init__(self, **kwargs)
+        self.is_player = False
+        if 'is_player' in kwargs.keys():
+            self.is_player = kwargs['is_player']
         self.damage = 0
         if 'damage' in kwargs.keys():
             self.damage = int(kwargs['damage'])
 
 
-class SwordAttack(PlayerAttack):
+class SwordAttack(Attack):
     """Class representing the basic sword object."""
     width = 6
     beginning_length = 8
@@ -85,10 +105,11 @@ class SwordAttack(PlayerAttack):
         else:
             image = pygame.Surface((self.width, self.beginning_length))
         image.fill((0, 0, 222))
+        # end placeholder image
         kw_dict = kwargs
         kw_dict['image'] = image
-        # end placeholder image
-        PlayerAttack.__init__(self, **kw_dict)
+        kw_dict['is_player'] = True
+        Attack.__init__(self, **kw_dict)
         self.coords = p_center
         self.align()
         self.mode = 'extend'
@@ -201,7 +222,16 @@ class Player(GameObject):
             if (event.key == K_d or event.key == K_RIGHT) and self.dx > 0:
                 self.dx -= min(self.dx, self.move_speed)
 
-    def horizontal_collisions(self, wall_group):
+    def horizontal_collisions(self, enemy_group, wall_group):
+        enemies = pygame.sprite.spritecollide(self, enemy_group, False)
+        while len(enemies) > 0:
+            self.health -= enemies[0].damage
+            if self.rect.centerx < enemies[0].rect.centerx:
+                self.rect.right = enemies[0].rect.left - 6
+            else:
+                self.rect.left = enemies[0].rect.right + 6
+            enemies = pygame.sprite.spritecollide(self, enemy_group, False)
+            self.dx = 0
         walls = pygame.sprite.spritecollide(self, wall_group, False)
         while len(walls) > 0:
             if self.dx < 0:
@@ -217,7 +247,16 @@ class Player(GameObject):
             walls = pygame.sprite.spritecollide(self, wall_group, False)
             self.dx = 0
 
-    def vertical_collisions(self, wall_group):
+    def vertical_collisions(self, enemy_group, wall_group):
+        enemies = pygame.sprite.spritecollide(self, enemy_group, False)
+        while len(enemies) > 0:
+            self.health -= enemies[0].damage
+            if self.rect.centery < enemies[0].rect.centery:
+                self.rect.bottom = enemies[0].rect.top - 6
+            else:
+                self.rect.top = enemies[0].rect.bottom + 6
+            enemies = pygame.sprite.spritecollide(self, enemy_group, False)
+            self.dy = 0
         walls = pygame.sprite.spritecollide(self, wall_group, False)
         while len(walls) > 0:
             if self.dy < 0:
@@ -234,11 +273,12 @@ class Player(GameObject):
             self.dy = 0
 
     def collision_check(self, objects):
+        enemy_group = [x for x in objects if isinstance(x, Enemy)]
         wall_group = [x for x in objects if isinstance(x, Wall)]
         if self.dx != 0 or self.dy == 0:
-            self.horizontal_collisions(wall_group)
+            self.horizontal_collisions(enemy_group, wall_group)
         if self.dy != 0:
-            self.vertical_collisions(wall_group)
+            self.vertical_collisions(enemy_group, wall_group)
 
     def update(self, objects, **kwargs):
         if self.mode == 'attack':
@@ -251,3 +291,21 @@ class Player(GameObject):
         self.process_keys(objects)
         GameObject.update(self, **kwargs)
         self.collision_check(objects)
+
+
+class ObjectHandler:
+    """Class in charge of all GameObject interactions."""
+    def __init__(self, all_objects):
+        self.player = pygame.sprite.GroupSingle()
+        self.walls = pygame.sprite.Group()
+        self.enemies = pygame.sprite.Group()
+        self.attacks = pygame.sprite.Group()
+        for obj in all_objects:
+            if isinstance(obj, Player):
+                self.player.sprite = obj
+            elif isinstance(obj, Wall):
+                self.walls.add(obj)
+            elif isinstance(obj, Enemy):
+                self.enemies.add(obj)
+            elif isinstance(obj, Attack):
+                self.attacks.add(obj)
